@@ -154,19 +154,31 @@ they'll be committed to your working directory.
 
 ## Run locally
 
-Clone the repository and install dependencies:
+1. **Install prerequisites.** Ensure [Node.js](https://nodejs.org/) 20 or later is installed and set your OpenAI API key:
 
-```bash
-git clone https://github.com/xuda1979/auto_scientist_n_engineer.git
-cd auto_scientist_n_engineer
-npm install
-```
+    ```bash
+    export OPENAI_API_KEY="your-api-key"
+    ```
 
-Start the CLI from the checked-out source:
+2. **Clone and install dependencies:**
 
-```bash
-npx codex
-```
+    ```bash
+    git clone https://github.com/xuda1979/auto_scientist_n_engineer.git
+    cd auto_scientist_n_engineer
+    npm install
+    ```
+
+3. **Start the CLI from the checked-out source:**
+
+    ```bash
+    npx codex
+    ```
+
+4. **Run tests (optional):**
+
+    ```bash
+    npm test
+    ```
 
 The CLI waits 10 seconds for input at any prompt. If you do nothing, it automatically chooses the default option or selects all options when supported.
 
