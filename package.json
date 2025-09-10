@@ -1,9 +1,9 @@
 {
-  "name": "@openai/codex",
+  "name": "@asne/cli",
   "version": "0.0.0-dev",
   "license": "Apache-2.0",
   "bin": {
-    "codex": "bin/codex.js"
+    "asne": "bin/asne.js"
   },
   "type": "module",
   "engines": {
@@ -15,10 +15,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openai/codex.git"
+    "url": "git+https://github.com/xuda1979/auto_scientist_n_engineer.git"
   },
   "scripts": {
-    "test": "node test/codex_cli.test.mjs"
+    "test": "node test/asne_cli.test.mjs"
   },
   "dependencies": {
     "@vscode/ripgrep": "^1.15.14"
