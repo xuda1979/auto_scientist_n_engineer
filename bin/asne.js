@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Unified entry point for the Codex CLI.
+// Unified entry point for the Asne CLI.
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -57,7 +57,7 @@ if (!targetTriple) {
   throw new Error(`Unsupported platform: ${platform} (${arch})`);
 }
 
-const binaryPath = path.join(__dirname, "..", "bin", `codex-${targetTriple}`);
+const binaryPath = path.join(__dirname, "..", "bin", `asne-${targetTriple}`);
 
 // Use an asynchronous spawn instead of spawnSync so that Node is able to
 // respond to signals (e.g. Ctrl-C / SIGINT) while the native binary is
@@ -102,10 +102,10 @@ const updatedPath = getUpdatedPath(additionalDirs);
 
 const child = spawn(binaryPath, process.argv.slice(2), {
   stdio: "inherit",
-  env: { ...process.env, PATH: updatedPath, CODEX_MANAGED_BY_NPM: "1" },
+  env: { ...process.env, PATH: updatedPath, ASNE_MANAGED_BY_NPM: "1" },
 });
 
-// Automatically send input to the Codex CLI when it waits for user
+// Automatically send input to the Asne CLI when it waits for user
 // interaction. After 10 seconds of inactivity, send `a` followed by a newline
 // to select all options when supported; prompts that do not recognize `a`
 // will interpret the newline as choosing the default option.
