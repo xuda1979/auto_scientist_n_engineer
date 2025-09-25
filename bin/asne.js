@@ -101,41 +101,143 @@ if (rgDir) {
 const updatedPath = getUpdatedPath(additionalDirs);
 
 const child = spawn(binaryPath, process.argv.slice(2), {
-  stdio: "inherit",
+  stdio: ["pipe", "pipe", "pipe"],
   env: { ...process.env, PATH: updatedPath, ASNE_MANAGED_BY_NPM: "1" },
 });
 
-// Automatically send input to the Asne CLI when it waits for user
-// interaction. After 10 seconds of inactivity, send `a` followed by a newline
-// to select all options when supported; prompts that do not recognize `a`
-// will interpret the newline as choosing the default option.
-import fs from "fs";
+const isCI = Boolean(
+  process.env.CI ||
+    process.env.GITHUB_ACTIONS ||
+    process.env.BUILD_NUMBER ||
+    process.env.RUN_ID ||
+    process.env.CONTINUOUS_INTEGRATION,
+);
+const shouldAutoDecide = !isCI && Boolean(process.stdout?.isTTY);
 
-function openTtyWriteStream() {
-  try {
-    return process.platform === "win32"
-      ? fs.createWriteStream("CON")
-      : fs.createWriteStream("/dev/tty");
-  } catch {
-    return null;
+const forwardInputToChild = () => {
+  if (!child.stdin) {
+    return;
   }
+  process.stdin.pipe(child.stdin);
+  process.stdin.resume();
+};
+
+forwardInputToChild();
+
+if (child.stdin) {
+  child.stdin.on("error", () => {
+    /* ignore broken pipe when child exits */
+  });
 }
 
-const ttyWriter = openTtyWriteStream();
 let autoTimer;
+
+const sendToChild = (input) => {
+  if (!child.killed && child.stdin?.writable) {
+    child.stdin.write(input);
+  }
+};
 
 const scheduleAutoInput = () => {
   clearTimeout(autoTimer);
   autoTimer = setTimeout(() => {
-    if (!child.killed && ttyWriter) {
-      ttyWriter.write("a\n");
-    }
+    sendToChild("a\n");
     scheduleAutoInput();
   }, 10_000);
 };
 
-scheduleAutoInput();
-process.stdin.on("data", scheduleAutoInput);
+if (!shouldAutoDecide) {
+  scheduleAutoInput();
+}
+
+process.stdin.on("data", () => {
+  if (!shouldAutoDecide) {
+    scheduleAutoInput();
+  }
+});
+
+const stripAnsi = (value) =>
+  value.replace(
+    // eslint-disable-next-line no-control-regex
+    /\u001b\[[0-9;?]*[ -\/]*[@-~]/g,
+    "",
+  );
+
+let lastAutoLine = "";
+let lastAutoType = null;
+let lastAutoAt = 0;
+const autoCooldownMs = 500;
+
+const triggerAuto = (type, lineSignature) => {
+  const now = Date.now();
+  if (
+    lastAutoType === type &&
+    lastAutoLine === lineSignature &&
+    now - lastAutoAt < autoCooldownMs
+  ) {
+    return;
+  }
+  lastAutoType = type;
+  lastAutoLine = lineSignature;
+  lastAutoAt = now;
+  if (type === "all") {
+    sendToChild("a\n");
+  } else {
+    sendToChild("\n");
+  }
+};
+
+const defaultPatterns = [
+  /\[default:?/i,
+  /\([Yy]\/[Nn]\)/,
+  /\[[Yy]\/[Nn]\]/,
+  /\([Nn]\/[Yy]\)/,
+  /\[[Nn]\/[Yy]\]/,
+];
+
+const toggleAllPatterns = [/toggle all/i, /<a>\s*to toggle all/i];
+
+const handleAutoDecision = (chunk) => {
+  if (!shouldAutoDecide) {
+    return;
+  }
+
+  const sanitized = stripAnsi(chunk.toString("utf8"));
+  const lines = sanitized.split(/\r?\n/);
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      continue;
+    }
+
+    if (toggleAllPatterns.some((pattern) => pattern.test(line))) {
+      triggerAuto("all", line);
+      // Once we know we should select all, skip checking for defaults.
+      continue;
+    }
+
+    if (
+      (line.includes("?") && line.toLowerCase().includes("default")) ||
+      defaultPatterns.some((pattern) => pattern.test(line))
+    ) {
+      triggerAuto("default", line);
+    }
+  }
+};
+
+if (child.stdout) {
+  child.stdout.on("data", (chunk) => {
+    process.stdout.write(chunk);
+    handleAutoDecision(chunk);
+  });
+}
+
+if (child.stderr) {
+  child.stderr.on("data", (chunk) => {
+    process.stderr.write(chunk);
+  });
+}
 
 child.on("error", (err) => {
   // Typically triggered when the binary is missing or not executable.

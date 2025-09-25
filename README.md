@@ -7,7 +7,7 @@
 > This is the documentation for the _legacy_ TypeScript implementation of the Asne CLI. It has been superseded by the _Rust_ implementation. See the [README in the root of the Asne repository](https://github.com/xuda1979/auto_scientist_n_engineer/blob/main/README.md) for details.
 
 > [!NOTE]
-> This fork automatically selects the default option (and chooses all when available) after 10 seconds of inactivity when the CLI prompts for input.
+> When you run the CLI locally, this fork automatically accepts the default choice (or selects **all** options when supported) as soon as a prompt appears. In non-interactive environments (e.g., CI) it falls back to picking all options after 10 seconds of inactivity.
 
 ![Asne demo GIF using: asne "explain this codebase to me"](../.github/demo.gif)
 
