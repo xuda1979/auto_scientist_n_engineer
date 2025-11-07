@@ -18,7 +18,7 @@
     "url": "git+https://github.com/xuda1979/auto_scientist_n_engineer.git"
   },
   "scripts": {
-    "test": "node test/asne_cli.test.mjs"
+    "test": "node --test test"
   },
   "dependencies": {
     "@vscode/ripgrep": "^1.15.14"
