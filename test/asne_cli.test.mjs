@@ -1,12 +1,15 @@
-import fs from 'fs';
+import test from 'node:test';
 import assert from 'node:assert';
-import { fileURLToPath } from 'url';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const cliPath = path.join(__dirname, '..', 'bin', 'asne.js');
-assert.ok(fs.existsSync(cliPath), 'CLI entry script should exist');
 
-console.log('asne CLI entry exists');
+test('CLI entry script should exist', () => {
+  assert.ok(fs.existsSync(cliPath), 'CLI entry script should exist');
+});
+

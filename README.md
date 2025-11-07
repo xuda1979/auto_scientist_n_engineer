@@ -13,6 +13,29 @@
 
 ---
 
+## Automated revision workflow
+
+The JavaScript utilities inside `src/` implement an automated review loop that
+mirrors how Asne coordinates with an LLM to deliver user objectives. The
+`runAutoRevision` helper:
+
+- Collects a snapshot of every tracked source file in the repository.
+- Sends the user's objective, code snapshot, and most recent test results to an
+  LLM client that returns a git-style patch and the next test command to run.
+- Applies the patch, clears any existing test output file, executes the
+  requested command under the project root, and writes a Markdown summary of the
+  results.
+- Repeats the cycle until the LLM reports that the objective is satisfied or a
+  configurable iteration limit is reached.
+
+This logic is designed to operate in a local environment where the diff emitted
+by the LLM is applied with `git apply` and tests are run directly via the
+system shell. The Markdown report that each iteration produces matches the
+format in `TEST_RESULTS.md` so that downstream tooling can surface the latest
+command, exit code, and captured stdout/stderr.
+
+---
+
 <details>
 <summary><strong>Table of contents</strong></summary>
 
